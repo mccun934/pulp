@@ -215,7 +215,7 @@ def _validate_syntax(descriptors):
             # Make sure all required fields are present
             for key in REQUIRED_DEFINITION_FIELDS:
                 if key not in type_definition:
-                    LOG.error('Unexpected key [%s] from descriptor [%s] in type definition [%s]' % (key, d.filename, ', '.join(type_definition.keys())))
+                    LOG.error('Missing required key [%s] from descriptor [%s] in type definition [%s]' % (key, d.filename, ', '.join(type_definition.keys())))
                     missing_attribute_descriptors.append(d)
 
     if len(invalid_attribute_descriptors) > 0:

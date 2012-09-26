@@ -52,7 +52,7 @@ class ContentType(Model):
 
         self.display_name = display_name
         self.description = description
-        
+
         self.unit_key = unit_key
         self.search_indexes = search_indexes
 
