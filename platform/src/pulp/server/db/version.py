@@ -15,7 +15,6 @@ import logging
 
 import pymongo
 
-#from pulp.server.db.connection import get_object_db
 from pulp.server.db.model.base import Model
 
 
