@@ -64,6 +64,39 @@ class MissingDefinitions(Exception):
 
 # -- public -------------------------------------------------------------------
 
+def get_unapplied_migrations(typedef):
+    """
+    Check the typedef in the database against the migrations we can find on the filsystem for that
+    typedef. If the ContentType collection for this typedef doesn't have a schema_version, then we
+    can just set that schema_version to the latest migration version found, and return empty list.
+    If it does have a version, we return a list of all migration modules we found that have versions
+    higher than the schema_version recorded in the database.
+    """
+    print typedef
+    print __import__('pulp_rpm')
+    print __import__('pulp_rpm.migrations')
+    migrations_module = __import__(typedef['schema_migrations_module'])
+    parts_to_import = typedef['schema_migrations_module'].split('.')
+    parts_to_import.pop(0)
+    for part in parts_to_import:
+        migrations_module = getattr(migrations_module, part)
+    print migrations_module
+    import os
+    import pkgutil
+    print os.path.dirname(migrations_module.__file__)
+    print pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])
+    print [name for _, name, _ in pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])]
+    migration_modules = [module for module in dir(migrations_module) \
+        if module.__name__ != '__init__']
+    print migration_modules
+    migration_modules = [module for module in migration_modules \
+        if _get_migration_module_version(module) > current_typedef_version]
+    print migration_modules
+    migration_modules = sorted(migration_modules,
+        cmp=lambda x,y: cmp(_get_migration_module_version(x), _get_migration_module_version(y)))
+    print migration_modules
+    return migration_modules
+
 def update_database(definitions, error_on_missing_definitions=False):
     """
     Brings the database up to date with the types defined in the given
@@ -89,7 +122,8 @@ def update_database(definitions, error_on_missing_definitions=False):
     missing = set(existing_type_names) - set(update_type_ids)
 
     if len(missing) > 0:
-        LOG.warn('Found the following type definitions that were not present in the update collection [%s]' % ', '.join(missing))
+        LOG.warn(('Found the following type definitions that were not present in the update ' +\
+            'collection [%s]') % ', '.join(missing))
 
         if error_on_missing_definitions:
             raise MissingDefinitions(missing)
@@ -197,7 +231,6 @@ def all_type_collection_names():
 
     return type_collection_names
 
-
 def all_type_definitions():
     """
     @return: list of all type definitions in the database (mongo SON objects)
@@ -207,7 +240,6 @@ def all_type_definitions():
     coll = ContentType.get_collection()
     types = list(coll.find())
     return types
-
 
 def type_definition(type_id):
     """
@@ -221,7 +253,6 @@ def type_definition(type_id):
     type_ = collection.find_one({'id': type_id})
     return type_
 
-
 def unit_collection_name(type_id):
     """
     Returns the name of the collection used to store units of the given type.
@@ -233,7 +264,6 @@ def unit_collection_name(type_id):
     @rtype:  str
     """
     return TYPE_COLLECTION_PREFIX + type_id
-
 
 def type_units_unit_key(type_id):
     """
@@ -266,12 +296,16 @@ def _create_or_update_type(type_def):
     # Add or update an entry in the types list
     content_type_collection = ContentType.get_collection()
     content_type = ContentType(type_def.id, type_def.display_name, type_def.description,
-                               type_def.unit_key, type_def.search_indexes, type_def.referenced_types)
+                               type_def.unit_key, type_def.search_indexes,
+                               type_def.referenced_types, type_def.schema_migrations_module)
     # no longer rely on _id = id
     existing_type = content_type_collection.find_one({'id': type_def.id}, fields=[])
     if existing_type is not None:
         content_type._id = existing_type['_id']
-    # XXX this still causes a potential race condition when 2 users are updating the same type
+    else:
+        # This is a new type, so let's set its migration version to the latest available so we don't
+        # apply migrations unnecessarily
+        content_type._schema_version = _latest_available_schema_version(type_def)
     content_type_collection.save(content_type, safe=True)
 
 def _update_indexes(type_def, unique):
@@ -303,20 +337,16 @@ def _update_indexes(type_def, unique):
         else:
             LOG.info('Index already existed on type definition [%s]' % type_def.id)
 
-
 def _update_unit_key(type_def):
     _update_indexes(type_def, True)
 
-
 def _update_search_indexes(type_def):
     _update_indexes(type_def, False)
-
 
 def _drop_indexes(type_def):
     collection_name = unit_collection_name(type_def.id)
     collection = pulp_db.get_collection(collection_name, create=False)
     collection.drop_indexes()
-
 
 def _create_index_keypair(index):
     """
@@ -331,3 +361,7 @@ def _create_index_keypair(index):
 
     mongo_index = [(k, ASCENDING) for k in index]
     return mongo_index
+
+def _get_migration_module_version(module):
+    version = int(re.match(r'(?P<version>\d+)_.*', module.__name__).groupdict()['version'])
+    return version

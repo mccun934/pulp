@@ -28,7 +28,7 @@ from pulp.plugins.types import model
 
 # -- constants ---------------------------------------------------------------
 
-REQUIRED_DEFINITION_FIELDS = ['id', 'display_name', 'description', 'unit_key']
+REQUIRED_DEFINITION_FIELDS = ['id', 'display_name', 'description', 'unit_key', 'schema_migrations_module']
 OPTIONAL_DEFINITION_FIELDS = ['search_indexes', 'referenced_types']
 
 TYPE_ID_REGEX = re.compile(r'^[_A-Za-z]+$') # letters and underscore
@@ -284,7 +284,7 @@ def _instantiate_type_definitions(descriptors):
 
         type_def = model.TypeDefinition(type_dict['id'], type_dict['display_name'],
                                         type_dict['description'], type_dict['unit_key'],
-                                        search_indexes, referenced_types)
+                                        search_indexes, referenced_types, type_dict['schema_migrations_module'])
         all_types.append(type_def)
 
     return all_types

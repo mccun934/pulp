@@ -40,12 +40,14 @@ class ContentType(Model):
     @ivar referenced_types: list of IDs of types that may be referenced from units
                             of this type
     @type referenced_types: list of str
+    @ivar schema_migrations_module: A string that represents a Python package that contains the schema migrations.
+    @type schema_migrations_module: str
     """
 
     collection_name = 'content_types'
     unique_indices = ('id',)
 
-    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types):
+    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types, schema_migrations_module):
         super(ContentType, self).__init__()
 
         self.id = id
@@ -57,3 +59,4 @@ class ContentType(Model):
         self.search_indexes = search_indexes
 
         self.referenced_types = referenced_types
+        self.schema_migrations_module = schema_migrations_module

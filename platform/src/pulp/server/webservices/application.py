@@ -95,6 +95,7 @@ def _initialize_pulp():
     _IS_INITIALIZED = True
 
     # check our db version and other support
+    # TODO: Ensure that content types have been migrated to each of their expected versions
     check_version()
 
     # pulp generic content initialization

@@ -4,6 +4,7 @@
         "display_name" : "Puppet Module",
         "description" : "Puppet Module",
         "unit_key" : ["name", "version", "author"],
-        "search_indexes" : ["author", "tag_list"]
+        "search_indexes" : ["author", "tag_list"],
+        "schema_migrations_module" : "pulp_puppet.migrations.puppet_module"
     }
 ]}

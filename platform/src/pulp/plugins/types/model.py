@@ -34,13 +34,14 @@ class TypeDescriptor:
         self.contents = contents
         self.parsed = None  # stores the parsed version of the contents
 
+
 class TypeDefinition:
     """
     Once a type descriptor has been parsed, instances of this class will
     describe the types to be loaded.
     """
 
-    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types):
+    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types, schema_migrations_module):
         self.id = id
         self.display_name = display_name
         self.description = description
@@ -57,3 +58,4 @@ class TypeDefinition:
         self.unit_key = unit_key
         self.search_indexes = search_indexes
         self.referenced_types = referenced_types
+        self.schema_migrations_module = schema_migrations_module

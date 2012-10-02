@@ -53,9 +53,6 @@ def initialize(validate=True):
     # pre-initialization validation
     assert not _is_initialized()
 
-    # initialization
-    _load_content_types(_TYPES_DIR)
-
     _create_manager()
     # add plugins here in the form (path, base class, manager map)
     plugin_tuples =  ((_DISTRIBUTORS_DIR, Distributor, _MANAGER.distributors),
@@ -355,6 +352,17 @@ def get_profiler_by_type(type_id):
 
 # initialization methods -------------------------------------------------------
 
+def load_content_types(types_dir=_TYPES_DIR):
+    """
+    @type types_dir: str
+    """
+    if not os.access(types_dir, os.F_OK | os.R_OK):
+        msg = _('Cannot load types: path does not exist or cannot be read: %(p)s')%{'p': types_dir}
+        _LOG.critical(msg)
+        raise IOError(msg)
+    descriptors = _load_type_descriptors(types_dir)
+    _load_type_definitions(descriptors)
+
 def _is_initialized():
     """
     @rtype: bool
@@ -364,18 +372,6 @@ def _is_initialized():
 def _create_manager():
     global _MANAGER
     _MANAGER = PluginManager()
-
-def _load_content_types(types_dir):
-    """
-    @type types_dir: str
-    """
-    if not os.access(types_dir, os.F_OK | os.R_OK):
-        msg = _('Cannot load types: path does not exist or cannot be read: %(p)s')
-        _LOG.critical(msg % {'p': types_dir})
-        return
-    descriptors = _load_type_descriptors(types_dir)
-    _load_type_definitions(descriptors)
-
 
 def _load_type_descriptors(path):
     """
@@ -390,7 +386,6 @@ def _load_type_descriptors(path):
         descriptor = TypeDescriptor(file_name, content)
         descriptors.append(descriptor)
     return descriptors
-
 
 def _load_type_definitions(descriptors):
     """
@@ -412,5 +407,3 @@ def _validate_importers():
                 continue
             msg = _('Importer %(i)s: no type definition found for %(t)s')
             raise loader_exceptions.InvalidImporter(msg % {'i': plugin_id, 't': type_})
-
-
