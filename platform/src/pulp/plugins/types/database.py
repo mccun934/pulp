@@ -18,6 +18,9 @@ type-specific collections that exist to suit the type needs.
 """
 
 import logging
+import os
+import pkgutil
+import re
 
 from pymongo import ASCENDING
 
@@ -63,7 +66,6 @@ class MissingDefinitions(Exception):
         return 'MissingDefinitions [%s]' % ', '.join(self.missing_type_ids)
 
 # -- public -------------------------------------------------------------------
-
 def get_unapplied_migrations(typedef):
     """
     Check the typedef in the database against the migrations we can find on the filsystem for that
@@ -72,29 +74,17 @@ def get_unapplied_migrations(typedef):
     If it does have a version, we return a list of all migration modules we found that have versions
     higher than the schema_version recorded in the database.
     """
-    print typedef
-    print __import__('pulp_rpm')
-    print __import__('pulp_rpm.migrations')
-    migrations_module = __import__(typedef['schema_migrations_module'])
-    parts_to_import = typedef['schema_migrations_module'].split('.')
-    parts_to_import.pop(0)
-    for part in parts_to_import:
-        migrations_module = getattr(migrations_module, part)
-    print migrations_module
-    import os
-    import pkgutil
-    print os.path.dirname(migrations_module.__file__)
-    print pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])
-    print [name for _, name, _ in pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])]
-    migration_modules = [module for module in dir(migrations_module) \
-        if module.__name__ != '__init__']
-    print migration_modules
+    migrations_module = _get_python_module(typedef['schema_migrations_module'])
+    module_names = [name for _, name, _ in \
+        pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])]
+    migration_modules = [_get_python_module('%s.%s'%(migrations_module.__name__, module_name)) \
+        for module_name in module_names]
+    for module in migration_modules:
+        module.version = _get_migration_module_version(module)
     migration_modules = [module for module in migration_modules \
-        if _get_migration_module_version(module) > current_typedef_version]
-    print migration_modules
+        if module.version > typedef['_schema_version']]
     migration_modules = sorted(migration_modules,
         cmp=lambda x,y: cmp(_get_migration_module_version(x), _get_migration_module_version(y)))
-    print migration_modules
     return migration_modules
 
 def update_database(definitions, error_on_missing_definitions=False):
@@ -299,14 +289,30 @@ def _create_or_update_type(type_def):
                                type_def.unit_key, type_def.search_indexes,
                                type_def.referenced_types, type_def.schema_migrations_module)
     # no longer rely on _id = id
-    existing_type = content_type_collection.find_one({'id': type_def.id}, fields=[])
+    existing_type = content_type_collection.find_one({'id': type_def.id},
+        fields=['_schema_version'])
     if existing_type is not None:
         content_type._id = existing_type['_id']
+        # if the existing object doesn't define a schema version, we should assume a version of 0
+        content_type['_schema_version'] = existing_type['_schema_version']
     else:
         # This is a new type, so let's set its migration version to the latest available so we don't
         # apply migrations unnecessarily
-        content_type._schema_version = _latest_available_schema_version(type_def)
+        content_type['_schema_version'] = _latest_available_schema_version(type_def)
     content_type_collection.save(content_type, safe=True)
+
+def _get_python_module(module_string):
+    """
+    The __import__ method returns the top level module when asked for a module with the dotted
+    notation. For example, __import__('a.b.c') will return a, not c. This is fine, but we could use
+    something that returns c for our migration discovery code. That's what this does :)
+    """
+    module = __import__(module_string)
+    parts_to_import = module_string.split('.')
+    parts_to_import.pop(0)
+    for part in parts_to_import:
+        module = getattr(module, part)
+    return module
 
 def _update_indexes(type_def, unique):
 
@@ -324,10 +330,12 @@ def _update_indexes(type_def, unique):
     for index in index_list:
 
         if isinstance(index, (list, tuple)):
-            LOG.info('Ensuring index [%s] (unique: %s) on type definition [%s]' % (', '.join(index), unique, type_def.id))
+            LOG.info('Ensuring index [%s] (unique: %s) on type definition [%s]'%(
+                ', '.join(index), unique, type_def.id))
             mongo_index = _create_index_keypair(index)
         else:
-            LOG.info('Ensuring index [%s] (unique: %s) on type definition [%s]' % (index, unique, type_def.id))
+            LOG.info('Ensuring index [%s] (unique: %s) on type definition [%s]'%(
+                index, unique, type_def.id))
             mongo_index = index
 
         index_name = collection.ensure_index(mongo_index, unique=unique, drop_dups=False)
@@ -363,5 +371,6 @@ def _create_index_keypair(index):
     return mongo_index
 
 def _get_migration_module_version(module):
-    version = int(re.match(r'(?P<version>\d+)_.*', module.__name__).groupdict()['version'])
+    migration_module_name = module.__name__.split('.')[-1]
+    version = int(re.match(r'(?P<version>\d+)_.*', migration_module_name).groupdict()['version'])
     return version

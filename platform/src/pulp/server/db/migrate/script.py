@@ -18,6 +18,7 @@ import sys
 from optparse import OptionParser, SUPPRESS_HELP
 
 from pulp.server.db import connection
+from pulp.server.db.model.content import ContentType
 
 # the db connection and auditing need to be initialied before any further
 # imports since the imports execute initialization code relying on the
@@ -66,24 +67,27 @@ def start_logging(options):
     logger.addHandler(handler)
 
 def migrate_database_type_models(options):
+    content_type_collection = ContentType.get_collection()
     all_typedefs = all_type_definitions()
     for typedef in all_typedefs:
         migrations_to_apply = get_unapplied_migrations(typedef)
         if not migrations_to_apply:
-            print 'No migrations to apply for %s.'%typedef
+            print 'No migrations to apply for %s.'%typedef['display_name']
             continue
 
         # Do the migrations, yo
         for migration_module in migrations_to_apply:
             migration_module.migrate()
-
-        # Next, we want to ensure that the requested indexes are in place, and that we don't have
-        # any extra indexes that weren't requested.
-        _configure_typedef_indexes(typedef)
+            typedef._schema_migration_version = migration_module.version
+            content_type_collection.update({'_id': typedef['_id']},
+                {'$set': {'_schema_version': migration_module.version}}, safe=True)
+            print '%s migrated to schema version %s.'%(
+                typedef['display_name'], migration_module.version)
 
         # Now our _get_unapplied_migrations() method should return an empty list. If it doesn't,
         # something is wrong.
-        if _get_unapplied_migrations(typedef):
+        typedef = content_type_collection.find_one({'_id': typedef['_id']})
+        if get_unapplied_migrations(typedef):
             raise DataError('Applying typedef migrations failed.')
 
 def migrate_platform_data_model(options):
