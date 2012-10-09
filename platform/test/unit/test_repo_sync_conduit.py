@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
-# Copyright (c) 2011 Red Hat, Inc.
+# Copyright (c) 2012 Red Hat, Inc.
 #
 #
 # This software is licensed to you under the GNU General Public
@@ -34,8 +34,10 @@ import pulp.server.managers.content.query as query_manager
 
 # constants --------------------------------------------------------------------
 
-TYPE_1_DEF = types_model.TypeDefinition('type_1', 'Type 1', 'One', ['key-1'], ['search-1'], ['type_2'])
-TYPE_2_DEF = types_model.TypeDefinition('type_2', 'Type 2', 'Two', ['key-2a', 'key-2b'], [], ['type_1'])
+TYPE_1_DEF = types_model.TypeDefinition('type_1', 'Type 1', 'One', ['key-1'], ['search-1'],
+                                        ['type_2'], 'pulp_rpm.migrations.rpm')
+TYPE_2_DEF = types_model.TypeDefinition('type_2', 'Type 2', 'Two', ['key-2a', 'key-2b'], [],
+                                        ['type_1'], 'pulp_rpm.migrations.rpm')
 
 # -- test cases ---------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright (c) 2011 Red Hat, Inc.
 #
@@ -12,7 +12,6 @@
 # have received a copy of GPLv2 along with this software; if not, see
 # http://www.gnu.org/licenses/old-licenses/gpl-2.0.txt.
 
-# Python
 import mock
 
 import mock_plugins
@@ -28,15 +27,16 @@ from pulp.plugins.types.model import TypeDefinition
 from pulp.plugins.loader import api as plugin_api
 from pulp.plugins.conduits.profiler import ProfilerConduit, ProfilerConduitException
 
-# -- test cases ---------------------------------------------------------------
 
 class BaseProfilerConduitTests(base.PulpServerTests):
 
     CONSUMER_ID = 'test-consumer'
     REPO_ID = 'test-repo'
     DISTRIBUTOR_ID = 'test-distributor'
-    TYPE_1_DEF = TypeDefinition('type-1', 'Type 1', 'One', ['key-1'], [], [])
-    TYPE_2_DEF = TypeDefinition('type-2', 'Type 2', 'Two', ['key-2'], [], [])
+    TYPE_1_DEF = TypeDefinition('type-1', 'Type 1', 'One', ['key-1'], [], [],
+                                'pulp_rpm.migrations.rpm')
+    TYPE_2_DEF = TypeDefinition('type-2', 'Type 2', 'Two', ['key-2'], [], [],
+                                'pulp_rpm.migrations.rpm')
     PROFILE = { 'name':'zsh', 'version':'1.0'}
     UNIT_ID = 0
 
