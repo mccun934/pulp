@@ -26,8 +26,8 @@ VALID_DESCRIPTOR_1 = model.TypeDescriptor('valid_descriptor_1',
      "unit_key" : ["name", "version", "release", "arch", "filename", "checksum"],
      "search_indexes" : [
          ["name", "epoch", "version", "release", "arch"],
-         "filename"
-     ]}
+         "filename"],
+     "schema_migrations_module": "pulp_rpm.migrations.rpm"}
    ]}
 """)
 
@@ -229,7 +229,8 @@ class ParserTest(unittest.TestCase):
         no_id = model.TypeDescriptor('no_id',
             """{"types": [
                 {"display_name" : "RPM", "description" : "RPM",
-                 "unit_key" : "name", "search_indexes" : "name"}
+                 "unit_key" : "name", "search_indexes" : "name",
+                 "schema_migrations_module" : "pulp_rpm.migrations.rpm"}
                ]}"""
         )
 
@@ -262,7 +263,7 @@ class ParserTest(unittest.TestCase):
         except parser.InvalidTypeId, e:
             self.assertEqual(1, len(e.type_ids))
             self.assertEqual('bad-id', e.type_ids[0])
-        
+
     def test_parse_duplicate_type(self):
         """
         Tests two types with the same ID throw the correct error.
