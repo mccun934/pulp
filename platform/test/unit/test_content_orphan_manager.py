@@ -30,8 +30,10 @@ import mock_plugins
 
 # globals and constants --------------------------------------------------------
 
-PHONY_TYPE_1 = TypeDefinition('phony_type_1', 'Phony Type 1', None, 'name', [], [])
-PHONY_TYPE_2 = TypeDefinition('phony_type_2', 'Phony Type 2', None, 'name', [], [])
+PHONY_TYPE_1 = TypeDefinition('phony_type_1', 'Phony Type 1', None, 'name', [], [],
+                              'pulp_rpm.migrations.rpm')
+PHONY_TYPE_2 = TypeDefinition('phony_type_2', 'Phony Type 2', None, 'name', [], [],
+                              'pulp_rpm.migrations.rpm')
 
 PHONY_REPO_ID = 'phony_repo'
 PHONY_USER_ID = 'orphan_manager_unittests'
