@@ -41,7 +41,8 @@ class TypeDefinition:
     describe the types to be loaded.
     """
 
-    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types, schema_migrations_module):
+    def __init__(self, id, display_name, description, unit_key, search_indexes, referenced_types,
+                 schema_migrations_module):
         self.id = id
         self.display_name = display_name
         self.description = description

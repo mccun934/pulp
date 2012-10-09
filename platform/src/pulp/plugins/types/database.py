@@ -65,6 +65,7 @@ class MissingDefinitions(Exception):
     def __str__(self):
         return 'MissingDefinitions [%s]' % ', '.join(self.missing_type_ids)
 
+
 # -- public -------------------------------------------------------------------
 def get_unapplied_migrations(typedef):
     """
@@ -73,19 +74,16 @@ def get_unapplied_migrations(typedef):
     can just set that schema_version to the latest migration version found, and return empty list.
     If it does have a version, we return a list of all migration modules we found that have versions
     higher than the schema_version recorded in the database.
+
+    :param typedef: The typedef in question
+    :type typedef:  BSON object
+    :returns:       A list of the unapplied migration modules for the typedef, sorted by version.
+    :rtype:         L{Python modules}
     """
-    migrations_module = _get_python_module(typedef['schema_migrations_module'])
-    module_names = [name for _, name, _ in \
-        pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])]
-    migration_modules = [_get_python_module('%s.%s'%(migrations_module.__name__, module_name)) \
-        for module_name in module_names]
-    for module in migration_modules:
-        module.version = _get_migration_module_version(module)
-    migration_modules = [module for module in migration_modules \
+    migration_modules = [module for module in _get_migrations(typedef) \
         if module.version > typedef['_schema_version']]
-    migration_modules = sorted(migration_modules,
-        cmp=lambda x,y: cmp(_get_migration_module_version(x), _get_migration_module_version(y)))
     return migration_modules
+
 
 def update_database(definitions, error_on_missing_definitions=False):
     """
@@ -124,7 +122,7 @@ def update_database(definitions, error_on_missing_definitions=False):
     for type_def in definitions:
         try:
             _create_or_update_type(type_def)
-        except Exception:
+        except Exception, e:
             LOG.exception('Exception creating/updating collection for type [%s]' % type_def.id)
             error_defs.append(type_def)
             continue
@@ -168,7 +166,8 @@ def clean():
     # just in case they got out of sync
     database = pulp_db.database()
     all_collection_names = database.collection_names()
-    type_collection_names = [n for n in all_collection_names if n.startswith(TYPE_COLLECTION_PREFIX)]
+    type_collection_names = \
+        [n for n in all_collection_names if n.startswith(TYPE_COLLECTION_PREFIX)]
     for drop_me in type_collection_names:
         database.drop_collection(drop_me)
 
@@ -221,6 +220,7 @@ def all_type_collection_names():
 
     return type_collection_names
 
+
 def all_type_definitions():
     """
     @return: list of all type definitions in the database (mongo SON objects)
@@ -230,6 +230,7 @@ def all_type_definitions():
     coll = ContentType.get_collection()
     types = list(coll.find())
     return types
+
 
 def type_definition(type_id):
     """
@@ -243,6 +244,7 @@ def type_definition(type_id):
     type_ = collection.find_one({'id': type_id})
     return type_
 
+
 def unit_collection_name(type_id):
     """
     Returns the name of the collection used to store units of the given type.
@@ -254,6 +256,7 @@ def unit_collection_name(type_id):
     @rtype:  str
     """
     return TYPE_COLLECTION_PREFIX + type_id
+
 
 def type_units_unit_key(type_id):
     """
@@ -272,7 +275,6 @@ def type_units_unit_key(type_id):
         return None
     return type_def['unit_key']
 
-# -- private -----------------------------------------------------------------
 
 def _create_or_update_type(type_def):
 
@@ -298,8 +300,35 @@ def _create_or_update_type(type_def):
     else:
         # This is a new type, so let's set its migration version to the latest available so we don't
         # apply migrations unnecessarily
-        content_type['_schema_version'] = _latest_available_schema_version(type_def)
+        migrations = _get_migrations(content_type)
+        if migrations:
+            content_type['_schema_version'] = migrations[-1].version
+        else:
+            content_type['_schema_version'] = 0
     content_type_collection.save(content_type, safe=True)
+
+
+def _get_migrations(typedef):
+    """
+    Finds all available migration modules for the given typedef, adds a version attribute to them
+    based on the number found at the beginning of their name, and then sorts by the version.
+
+    :param typedef: The typedef in question
+    :type typedef:  BSON object
+    :returns:       A list of the migration modules for the typedef, sorted by version.
+    :rtype:         L{Python modules}
+    """
+    migrations_module = _get_python_module(typedef['schema_migrations_module'])
+    module_names = [name for _, name, _ in \
+        pkgutil.iter_modules([os.path.dirname(migrations_module.__file__)])]
+    migration_modules = [_get_python_module('%s.%s'%(migrations_module.__name__, module_name)) \
+        for module_name in module_names]
+    for module in migration_modules:
+        module.version = _get_migration_module_version(module)
+    migration_modules = sorted(migration_modules,
+        cmp=lambda x,y: cmp(x.version, y.version))
+    return migration_modules
+
 
 def _get_python_module(module_string):
     """
@@ -313,6 +342,7 @@ def _get_python_module(module_string):
     for part in parts_to_import:
         module = getattr(module, part)
     return module
+
 
 def _update_indexes(type_def, unique):
 

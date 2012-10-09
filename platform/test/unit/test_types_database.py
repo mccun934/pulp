@@ -22,13 +22,13 @@ import pulp.server.db.connection as pulp_db
 # -- constants -----------------------------------------------------------------
 
 DEF_1 = TypeDefinition('def_1', 'Definition 1', 'Test definition',
-                       'single_1', ['search_1'], [])
+                       'single_1', ['search_1'], [], 'pulp_rpm.migrations.rpm')
 DEF_2 = TypeDefinition('def_2', 'Definition 2', 'Test definition',
-                       ['single_1'], ['search_1'], [])
+                       ['single_1'], ['search_1'], [], 'pulp_rpm.migrations.rpm')
 DEF_3 = TypeDefinition('def_3', 'Definition 3', 'Test definition',
-                       ['compound_1', 'compound_2'], ['search_1'], [])
+                       ['compound_1', 'compound_2'], ['search_1'], [], 'pulp_rpm.migrations.rpm')
 DEF_4 = TypeDefinition('def_4', 'Definition 4', 'Test definition',
-                       'single_1', ['search_1'], [])
+                       'single_1', ['search_1'], [], 'pulp_rpm.migrations.rpm')
 
 # -- test cases ----------------------------------------------------------------
 
@@ -74,7 +74,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         types_db.update_database(defs)
 
         # Test
-        same_defs = [DEF_4, DEF_3, DEF_2, DEF_1] # no real reason for this, just felt better than using the previous list
+        # no real reason for this, just felt better than using the previous list
+        same_defs = [DEF_4, DEF_3, DEF_2, DEF_1]
         types_db.update_database(same_defs)
 
         # Verify
@@ -149,7 +150,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        busted = TypeDefinition('!@#$%^&*()', 'Busted', 'Busted', None, None, [])
+        busted = TypeDefinition('!@#$%^&*()', 'Busted', 'Busted', None, None, [],
+                                'pulp_rpm.migrations.rpm')
         defs = [DEF_1, busted]
 
         # Tests
@@ -167,7 +169,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [],
+                                  'pulp_rpm.migrations.rpm')
         types_db._create_or_update_type(type_def)
 
         # Test
@@ -195,8 +198,10 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        types_db._create_or_update_type(TypeDefinition('a', 'A', 'A', [], [], []))
-        types_db._create_or_update_type(TypeDefinition('b', 'B', 'B', [], [], []))
+        types_db._create_or_update_type(TypeDefinition('a', 'A', 'A', [], [], [],
+                                                       'pulp_rpm.migrations.rpm'))
+        types_db._create_or_update_type(TypeDefinition('b', 'B', 'B', [], [], [],
+                                                       'pulp_rpm.migrations.rpm'))
 
         # Test
         type_ids = types_db.all_type_ids()
@@ -240,7 +245,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['unique_1', 'unique_2'], ['name'], [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['unique_1', 'unique_2'], ['name'],
+                                  [], 'pulp_rpm.migrations.rpm')
         types_db._create_or_update_type(type_def)
 
         # Test
@@ -268,7 +274,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [],
+                                  'pulp_rpm.migrations.rpm')
 
         # Test
         types_db._create_or_update_type(type_def)
@@ -297,7 +304,8 @@ class TypesDatabaseTests(base.PulpServerTests):
         """
 
         # Setup
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', ['name'], ['name'], [],
+                                  'pulp_rpm.migrations.rpm')
         types_db._create_or_update_type(type_def)
 
         # Test
@@ -331,7 +339,8 @@ class TypesDatabaseTests(base.PulpServerTests):
 
         # Setup
         unit_key = 'individual_1',
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', unit_key, None, [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', unit_key, None, [],
+                                  'pulp_rpm.migrations.rpm')
 
         # Test
         types_db._update_unit_key(type_def)
@@ -359,7 +368,8 @@ class TypesDatabaseTests(base.PulpServerTests):
 
         # Setup
         unit_key = ['compound_1', 'compound_2']
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', unit_key, None, [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', unit_key, None, [],
+                                  'pulp_rpm.migrations.rpm')
 
         # Test
         types_db._update_unit_key(type_def)
@@ -394,7 +404,8 @@ class TypesDatabaseTests(base.PulpServerTests):
             ['compound_1', 'compound_2'],
             'individual_1'
         ]
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', None, search_indexes, [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', None, search_indexes, [],
+                                  'pulp_rpm.migrations.rpm')
 
         # Test
         types_db._update_search_indexes(type_def)
@@ -427,13 +438,15 @@ class TypesDatabaseTests(base.PulpServerTests):
 
     def test_drop_indexes(self):
         """
-        Tests updating indexes on an existing collection with different indexes correctly changes them.
+        Tests updating indexes on an existing collection with different indexes correctly changes
+        them.
         """
 
         # Setup
         old_key = ['compound_1', 'compound_2']
 
-        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', old_key, None, [])
+        type_def = TypeDefinition('rpm', 'RPM', 'RPM Packages', old_key, None, [],
+                                  'pulp_rpm.migrations.rpm')
         types_db._update_unit_key(type_def)
 
         # Test
