@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright (c) 2012 Red Hat, Inc.
 #
@@ -30,18 +30,16 @@ from pulp.server.managers.repo.unit_association import OWNER_TYPE_USER, OWNER_TY
 import pulp.server.managers.content.cud as content_cud_manager
 import pulp.server.managers.factory as manager_factory
 
-# constants --------------------------------------------------------------------
 
 TYPE_1_DEF = model.TypeDefinition('type-1', 'Type 1', 'Test Definition One',
-                                  ['key-1'], ['search-1'], [])
+                                  ['key-1'], ['search-1'], [], 'pulp_rpm.migrations.rpm')
 
 TYPE_2_DEF = model.TypeDefinition('type-2', 'Type 2', 'Test Definition Two',
-                                  ['key-2a', 'key-2b'], [], ['type-1'])
+                                  ['key-2a', 'key-2b'], [], ['type-1'], 'pulp_rpm.migrations.rpm')
 
 MOCK_TYPE_DEF = model.TypeDefinition('mock-type', 'Mock Type', 'Used by the mock importer',
-                                     ['key-1'], [], [])
+                                     ['key-1'], [], [], 'pulp_rpm.migrations.rpm')
 
-# -- cud test cases -----------------------------------------------------------
 
 class RepoUnitAssociationManagerTests(base.PulpServerTests):
 
