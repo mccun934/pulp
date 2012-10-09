@@ -24,10 +24,10 @@ from pulp.server.managers.content.query import ContentQueryManager
 # constants --------------------------------------------------------------------
 
 TYPE_1_DEF = model.TypeDefinition('type-1', 'Type 1', 'Test Definition One',
-                                  ['key-1'], ['search-1'], [])
+                                  ['key-1'], ['search-1'], [], 'pulp_rpm.migrations.rpm')
 
 TYPE_2_DEF = model.TypeDefinition('type-2', 'Type 2', 'Test Definition Two',
-                                  ['key-2a', 'key-2b'], [], ['type-1'])
+                                  ['key-2a', 'key-2b'], [], ['type-1'], 'pulp_rpm.migrations.rpm')
 
 TYPE_1_UNITS = [
     {'key-1': 'A',
