@@ -39,16 +39,19 @@ VALID_DESCRIPTOR_2 = model.TypeDescriptor('valid_descriptor_2',
      "unit_key" : "name",
      "search_indexes" : [
          ["name", "filename"], "filename"
-     ]}
+     ],
+     "schema_migrations_module": "pulp_rpm.migrations.rpm"}
    ]}
 """)
 
 MULTI_TYPE_DESCRIPTOR = model.TypeDescriptor('multi_descriptor',
 """{"types": [
     {"id" : "rpm", "display_name" : "RPM", "description" : "RPM",
-     "unit_key" : "name", "search_indexes" : "name"},
+     "unit_key" : "name", "search_indexes" : "name",
+     "schema_migrations_module": "pulp_rpm.migrations.rpm"},
     {"id" : "deb", "display_name" : "DEB", "description" : "DEB",
-     "unit_key" : "name", "search_indexes" : "name"}
+     "unit_key" : "name", "search_indexes" : "name",
+     "schema_migrations_module": "pulp_rpm.migrations.rpm"}
    ]}
 """)
 
@@ -65,7 +68,8 @@ CHILD_TYPES_DESCRIPTOR = model.TypeDescriptor('child_descriptor',
 
 BAD_CHILD_TYPES_DESCRIPTOR = model.TypeDescriptor('bad_children',
 """{"types": [
-    {"id" : "a", "display_name" : "A", "description" : "A", "unit_key" : "name", "referenced_types" : ["not_there"]}
+    {"id" : "a", "display_name" : "A", "description" : "A", "unit_key" : "name",
+     "referenced_types" : ["not_there"], "schema_migrations_module": "pulp_rpm.migrations.rpm"}
    ]}
 """)
 
@@ -253,7 +257,8 @@ class ParserTest(unittest.TestCase):
         bad_id = model.TypeDescriptor('bad_id',
             """{"types": [
                 {"id" : "bad-id", "display_name" : "RPM", "description" : "RPM",
-                 "unit_key" : "name", "search_indexes" : "name"}
+                 "unit_key" : "name", "search_indexes" : "name",
+                 "schema_migrations_module": "pulp_rpm.migrations.rpm"}
                ]}"""
         )
 
