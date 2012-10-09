@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 #
 # Copyright (c) 2012 Red Hat, Inc.
 #
@@ -30,15 +30,15 @@ import pulp.server.managers.factory as manager_factory
 # -- constants ----------------------------------------------------------------
 
 TYPE_DEF_ALPHA = model.TypeDefinition('alpha', 'Alpha', 'Test Type Alpha',
-    ['key_1'], ['search_1'], [])
+    ['key_1'], ['search_1'], [], 'pulp_rpm.migrations.rpm')
 TYPE_DEF_BETA = model.TypeDefinition('beta', 'Beta', 'Test Type Beta',
-    ['key_1'], [], [])
+    ['key_1'], [], [], 'pulp_rpm.migrations.rpm')
 TYPE_DEF_GAMMA = model.TypeDefinition('gamma', 'Gamma', 'Test Type Gamma',
-    ['key_1'], [], [])
+    ['key_1'], [], [], 'pulp_rpm.migrations.rpm')
 TYPE_DEF_DELTA = model.TypeDefinition('delta', 'Delta', 'Test Type Delta',
-    ['key_1'], [], [])
+    ['key_1'], [], [], 'pulp_rpm.migrations.rpm')
 TYPE_DEF_EPSILON = model.TypeDefinition('epsilon', 'Epsilon', 'Test Type Epsilon',
-    ['key_1'], [], [])
+    ['key_1'], [], [], 'pulp_rpm.migrations.rpm')
 
 _QUERY_TYPES = [TYPE_DEF_ALPHA, TYPE_DEF_BETA, TYPE_DEF_GAMMA, TYPE_DEF_DELTA, TYPE_DEF_EPSILON]
 
