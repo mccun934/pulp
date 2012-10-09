@@ -55,10 +55,11 @@ MULTI_TYPE_DESCRIPTOR = model.TypeDescriptor('multi_descriptor',
 CHILD_TYPES_DESCRIPTOR = model.TypeDescriptor('child_descriptor',
 """{"types": [
     {"id" : "aaa", "display_name" : "A", "description" : "A", "unit_key" : "name",
-     "referenced_types" : ["ccc"]},
+     "referenced_types" : ["ccc"], "schema_migrations_module": "pulp_rpm.migrations.rpm"},
     {"id" : "bbb", "display_name" : "B", "description" : "B", "unit_key" : "name",
-     "referenced_types" : "ccc"},
-    {"id" : "ccc", "display_name" : "C", "description" : "C", "unit_key" : "name"}
+     "referenced_types" : "ccc", "schema_migrations_module": "pulp_rpm.migrations.rpm"},
+    {"id" : "ccc", "display_name" : "C", "description" : "C", "unit_key" : "name",
+     "schema_migrations_module": "pulp_rpm.migrations.rpm"}
    ]}
 """)
 
@@ -160,7 +161,7 @@ class ParserTest(unittest.TestCase):
 
         ccc_def = [d for d in definitions if d.id == 'ccc'][0]
         self.assertEqual(0, len(ccc_def.referenced_types))
-        
+
     def test_parse_invalid_descriptor(self):
         """
         Tests the proper exception is thrown when a descriptor cannot be parsed.
