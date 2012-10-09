@@ -25,7 +25,7 @@ from pulp.server.managers import factory as manager_factory
 # -- constants ----------------------------------------------------------------
 
 TYPE_1_DEF = model.TypeDefinition('type-1', 'Type 1', 'Test Definition One',
-    ['key-1'], ['search-1'], [])
+    ['key-1'], ['search-1'], [], 'pulp_rpm.migrations.rpm')
 
 # -- test cases ---------------------------------------------------------------
 
