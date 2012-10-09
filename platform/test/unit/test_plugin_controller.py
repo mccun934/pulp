@@ -54,8 +54,10 @@ class PluginControllerTests(base.PulpWebserviceTests):
 
     def test_get_types(self):
         # Setup
-        type_def_1 = TypeDefinition('type-1', 'Type 1', 'Type 1', [], [], [])
-        type_def_2 = TypeDefinition('type-2', 'Type 2', 'Type 2', [], [], [])
+        type_def_1 = TypeDefinition('type-1', 'Type 1', 'Type 1', [], [], [],
+                                    'pulp_rpm.migrations.rpm')
+        type_def_2 = TypeDefinition('type-2', 'Type 2', 'Type 2', [], [], [],
+                                    'pulp_rpm.migrations.rpm')
 
         types_db._create_or_update_type(type_def_1)
         types_db._create_or_update_type(type_def_2)
@@ -81,7 +83,8 @@ class PluginControllerTests(base.PulpWebserviceTests):
 
     def test_get_type(self):
         # Setup
-        type_def_1 = TypeDefinition('type-1', 'Type 1', 'Type 1', [], [], [])
+        type_def_1 = TypeDefinition('type-1', 'Type 1', 'Type 1', [], [], [],
+                                    'pulp_rpm.migrations.rpm')
         types_db._create_or_update_type(type_def_1)
 
         # Test
