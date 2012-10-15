@@ -33,7 +33,7 @@ class TestHandlerContainer(unittest.TestCase):
         self.deployer.clean()
         
     def container(self):
-        return Container(MockDeployer.ROOT, MockDeployer.PATH)
+        return Container(MockDeployer.CONF_D)
 
     def test_loading(self):
         # Setup
@@ -70,7 +70,7 @@ class TestDispatcher(unittest.TestCase):
         self.deployer.clean()
 
     def container(self):
-        return Container(MockDeployer.ROOT, MockDeployer.PATH)
+        return Container(MockDeployer.CONF_D, MockDeployer.PATH)
 
     def test_install(self):
         # Setup

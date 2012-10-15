@@ -136,6 +136,13 @@ class Descriptor:
         """
         return self.cfg['main']['enabled']
 
+    def module(self):
+        """
+        Get the path to the (optional) handler module.
+        @return: The path to the handler module.
+        """
+        return self.cfg['main'].get('module')
+
     def types(self):
         """
         Get a list of supported content types.
@@ -190,32 +197,22 @@ class Container:
     A content handler container.
     Loads and maintains a collection of content handlers
     mapped by typeid.
-    @cvar PATH: A list of directories containing handlers.
-    @type PATH: list
-    @ivar root: The descriptor root directory.
-    @type root: str
-    @ivar path: The list of directories to search for handlers.
-    @type path: list
+    @ivar descriptor_path: The descriptor root directory.
+    @type descriptor_path: str
     @ivar handlers: A mapping of typeid to handler.
     @type handlers: tuple (content={},distributor={})
     @ivar raised: A list of handler loading exceptions.
     @type raised: list
     """
 
-    PATH = [
-        '/usr/lib/pulp/agent/handlers',
-        '/usr/lib64/pulp/agent/handlers',
-    ]
-
-    def __init__(self, root=Descriptor.ROOT, path=PATH):
+    def __init__(self, descriptor_path=Descriptor.ROOT):
         """
         @param root: The descriptor root directory.
         @type root: str
         @param path: The list of directories to search for handlers.
         @type path: list
         """
-        self.root = root
-        self.path = path
+        self.descriptor_path = descriptor_path
         self.handlers = {}
         self.raised = []
         self.reset()
@@ -235,7 +232,7 @@ class Container:
         Load and validate content handlers.
         """
         self.reset()
-        for name, descriptor in Descriptor.list(self.root):
+        for name, descriptor in Descriptor.list(self.descriptor_path):
             self.__import(name, descriptor)
 
     def find(self, typeid, role=CONTENT):
@@ -283,22 +280,27 @@ class Container:
         @type descriptor: L{Descriptor}
         """
         try:
-            path = self.__findimpl(name)
-            mangled = self.__mangled(name)
-            mod = imp.load_source(mangled, path)
+            path = descriptor.module()
+            if path:
+                module = imp.load_source(self.mangled(name), path)
+            else:
+                module = None
             provided = descriptor.types()
             for role, types in provided.items():
                 for typeid in types:
                     typedef = Typedef(descriptor.cfg, typeid)
-                    hclass = typedef.cfg['class']
-                    hclass = getattr(mod, hclass)
+                    classname = typedef.cfg['class']
+                    if module is None:
+                        mod, classname = classname.rsplit('.', 1)
+                        module = __import__(mod, globals(), locals(), [classname])
+                    hclass = getattr(module, classname)
                     handler = hclass(typedef.cfg)
                     self.handlers[role][typeid] = handler
         except Exception, e:
             self.raised.append(e)
             log.exception('handler "%s", import failed', name)
 
-    def __mangled(self, name):
+    def mangled(self, name):
         """
         Mangle the module name to prevent (python) name collisions.
         @param name: A module name.
@@ -309,20 +311,3 @@ class Container:
         n = hash(name)
         n = hex(n)[2:]
         return ''.join((name, n))
-
-    def __findimpl(self, name):
-        """
-        Find a handler module.
-        @param name: The handler name.
-        @type name: str
-        @return: The fully qualified path to the handler module.
-        @rtype: str
-        @raise Exception: When not found.
-        """
-        mod = '%s.py' % name
-        for root in self.path:
-            path = os.path.join(root, mod)
-            if os.path.exists(path):
-                log.info('using: %s', path)
-                return path
-        raise Exception('%s, not found in:%s' % (mod, self.path))
